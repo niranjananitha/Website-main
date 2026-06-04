@@ -1,0 +1,653 @@
+/*
+ * ============================================================
+ * Aroganam Technologies — UI/UX Improvement Patch
+ * Targets: Text Contrast · Ticker Alignment · Visual Hierarchy
+ *          · Mobile Spacing & Responsiveness
+ * ============================================================
+ * Drop-in patch on top of existing index.css.
+ * Does NOT change branding, colors, or features.
+ * ============================================================
+ */
+
+/* ────────────────────────────────────────────────────────────
+   DESIGN TOKENS
+   Derive from existing brand (#fbfaec bg, dark headings)
+   ──────────────────────────────────────────────────────────── */
+:root {
+  /* Typography scale — enforces hierarchy */
+  --at-heading-color:    #111111;   /* high-contrast heading */
+  --at-subheading-color: #1a1a1a;   /* near-black for H2/H3  */
+  --at-body-color:       #3d3d3d;   /* 7:1 on #fbfaec bg     */
+  --at-muted-color:      #5a5a5a;   /* captions, labels      */
+  --at-label-color:      #6b6b6b;   /* placeholders, nav     */
+
+  /* Spacing rhythm */
+  --at-section-gap-mobile:  48px;
+  --at-section-gap-tablet:  72px;
+  --at-section-gap-desktop: 96px;
+
+  --at-card-gap-mobile:  16px;
+  --at-card-gap-desktop: 24px;
+
+  /* Ticker */
+  --at-ticker-height: 44px;
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   1. TEXT CONTRAST & CONSISTENCY
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Global heading hierarchy ── */
+h1, .heading-1 {
+  color: var(--at-heading-color);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+h2, .heading-2 {
+  color: var(--at-subheading-color);
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.015em;
+}
+
+h3, .heading-3 {
+  color: var(--at-subheading-color);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+h4, h5, h6 {
+  color: var(--at-subheading-color);
+  font-weight: 600;
+}
+
+p, li, td, th {
+  color: var(--at-body-color);
+  line-height: 1.7;
+}
+
+/* Secondary / muted text that was previously too faint */
+.text-muted,
+.text-secondary,
+[class*="text-gray-4"],
+[class*="text-gray-3"],
+[class*="text-neutral-4"],
+[class*="text-neutral-3"] {
+  color: var(--at-muted-color) !important;
+}
+
+/* Labels, captions, overlines */
+.label,
+.caption,
+.overline,
+.text-sm,
+.text-xs {
+  color: var(--at-label-color);
+}
+
+/* Ensure links inside body copy are legible */
+a:not([class]) {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* Prevent iOS Safari and other mobile browsers from forcing default blue text colors on contact links */
+a[href^="tel"],
+a[href^="mailto"] {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* Nav links — prevent too-light grey */
+nav a, .nav-link {
+  color: var(--at-subheading-color);
+}
+
+/* Cards — prevent washed-out text on card bg */
+.card p,
+.service-card p,
+[class*="card"] p {
+  color: var(--at-body-color);
+}
+
+/* Badge / tag text contrast */
+.badge,
+.tag,
+[class*="badge"],
+[class*="tag"] {
+  color: var(--at-heading-color);
+}
+
+/* Footer text readability */
+footer,
+footer p,
+footer li,
+footer a {
+  opacity: 1;
+  color: inherit;
+}
+
+footer p,
+footer li {
+  color: rgba(255, 255, 255, 0.80);   /* if footer is dark */
+}
+
+footer h3,
+footer h4,
+.footer-heading {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   2. TICKER / MARQUEE ALIGNMENT FIX
+   ════════════════════════════════════════════════════════════ */
+
+/*
+ * Root cause: marquee wrappers often lack explicit height +
+ * overflow:hidden, and the inner track is positioned with
+ * top/translateY that clips text descenders on mobile.
+ * Fix: use flex centering on both wrapper and track items.
+ */
+
+/* Wrapper */
+.ticker-wrapper,
+.marquee-wrapper,
+.marquee-clip {
+  display: flex;
+  align-items: center;             /* vertical center */
+  height: var(--at-ticker-height);
+  overflow: hidden;                /* prevent clip above/below */
+  width: 100%;
+  position: relative;
+}
+
+/* Track — the animated scrolling container */
+.ticker-track,
+.marquee-track,
+.ticker-wrapper > div,
+.marquee-wrapper > div {
+  display: flex;
+  align-items: center;             /* keeps items mid-height */
+  height: 100%;
+  white-space: nowrap;
+  will-change: transform;
+  /* preserve existing animation — do NOT override animation name */
+}
+
+/* Individual ticker items */
+.ticker-item,
+.marquee-item,
+.ticker-track > *,
+.marquee-track > *,
+.ticker-wrapper > div > *,
+.marquee-wrapper > div > * {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  padding: 0 24px;
+  white-space: nowrap;
+  /* reset any rogue top/bottom values */
+  top: unset !important;
+  bottom: unset !important;
+  vertical-align: middle;
+}
+
+/* Fix text baseline shift caused by line-height inheritance */
+.ticker-wrapper span,
+.marquee-wrapper span,
+.ticker-item span,
+.marquee-item span {
+  display: inline-block;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+/* Separator dots / pipes inside ticker */
+.ticker-item::after,
+.marquee-item::after {
+  content: "·";
+  margin-left: 24px;
+  opacity: 0.5;
+}
+
+/* Mobile: slightly taller to prevent cramping */
+@media (max-width: 640px) {
+  .ticker-wrapper,
+  .marquee-wrapper,
+  .marquee-clip {
+    height: 40px;
+  }
+  .ticker-item,
+  .marquee-item,
+  .ticker-track > *,
+  .marquee-track > * {
+    padding: 0 16px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Tablet */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .ticker-wrapper,
+  .marquee-wrapper,
+  .marquee-clip {
+    height: 42px;
+  }
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   3. VISUAL HIERARCHY — HEADINGS & SECTION TITLES
+   ════════════════════════════════════════════════════════════ */
+
+/* Section title pattern — the large "Services", "About", etc. */
+.section-title,
+.section-heading,
+[class*="section-title"],
+[class*="section-heading"] {
+  color: var(--at-heading-color);
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+/* Section subtitle / descriptor text below section title */
+.section-subtitle,
+.section-description,
+[class*="section-subtitle"],
+[class*="section-description"] {
+  color: var(--at-muted-color);
+  font-size: 1.05rem;
+  line-height: 1.65;
+  margin-top: 0.5rem;
+  margin-bottom: 2rem;
+  max-width: 60ch;
+}
+
+/* Reduce gap bloat between section title and first content block */
+.section-header,
+[class*="section-header"] {
+  margin-bottom: clamp(24px, 4vw, 48px);
+}
+
+/* Hero heading — must dominate */
+.hero-title,
+.hero-heading,
+[class*="hero-title"],
+[class*="hero-heading"] {
+  color: var(--at-heading-color);
+  font-weight: 800;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+/* Hero subtext */
+.hero-subtitle,
+.hero-description,
+[class*="hero-subtitle"],
+[class*="hero-description"] {
+  color: var(--at-body-color);
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  line-height: 1.65;
+  max-width: 54ch;
+  margin-top: 1rem;
+}
+
+/* Card / feature titles */
+.card-title,
+.feature-title,
+.service-title,
+[class*="card-title"],
+[class*="feature-title"],
+[class*="service-title"] {
+  color: var(--at-subheading-color);
+  font-weight: 600;
+  font-size: 1.1rem;
+  line-height: 1.35;
+  margin-bottom: 0.5rem;
+}
+
+/* FAQ question text */
+.faq-question,
+[class*="faq-question"],
+[class*="accordion-title"],
+[class*="accordion-header"] {
+  color: var(--at-subheading-color);
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+/* FAQ answer text */
+.faq-answer,
+[class*="faq-answer"],
+[class*="accordion-body"],
+[class*="accordion-content"] {
+  color: var(--at-body-color);
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+/* Overline / eyebrow labels above headings */
+.eyebrow,
+.overline,
+.label-overline,
+[class*="eyebrow"] {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--at-label-color);
+  margin-bottom: 0.5rem;
+}
+
+/* Improve spacing between heading and following paragraph */
+h1 + p, h2 + p, h3 + p {
+  margin-top: 0.75rem;
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   4. MOBILE SPACING & RESPONSIVENESS
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Prevent horizontal overflow globally ── */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ── Section vertical rhythm ── */
+section,
+.section {
+  padding-top:    var(--at-section-gap-desktop);
+  padding-bottom: var(--at-section-gap-desktop);
+}
+
+@media (max-width: 1024px) {
+  section,
+  .section {
+    padding-top:    var(--at-section-gap-tablet);
+    padding-bottom: var(--at-section-gap-tablet);
+  }
+}
+
+@media (max-width: 640px) {
+  section,
+  .section {
+    padding-top:    var(--at-section-gap-mobile);
+    padding-bottom: var(--at-section-gap-mobile);
+  }
+}
+
+/* ── Hero Section (mobile) ── */
+@media (max-width: 640px) {
+  .hero-section,
+  [class*="hero-section"],
+  [id="hero"] {
+    padding-top: 56px;
+    padding-bottom: 40px;
+    text-align: center;
+  }
+
+  .hero-title,
+  .hero-heading,
+  [class*="hero-title"],
+  [class*="hero-heading"] {
+    font-size: clamp(1.75rem, 8vw, 2.5rem);
+  }
+
+  .hero-subtitle,
+  .hero-description,
+  [class*="hero-subtitle"],
+  [class*="hero-description"] {
+    font-size: 0.975rem;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  /* Hero CTA buttons — stack on mobile */
+  .hero-cta,
+  .hero-actions,
+  [class*="hero-cta"],
+  [class*="hero-actions"] {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+  }
+
+  .hero-cta a,
+  .hero-cta button,
+  .hero-actions a,
+  .hero-actions button {
+    width: 100%;
+    max-width: 320px;
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+/* ── Service Cards grid (mobile) ── */
+.services-grid,
+.service-cards,
+[class*="services-grid"],
+[class*="service-cards"] {
+  display: grid;
+  gap: var(--at-card-gap-desktop);
+}
+
+@media (max-width: 640px) {
+  .services-grid,
+  .service-cards,
+  [class*="services-grid"],
+  [class*="service-cards"] {
+    grid-template-columns: 1fr;
+    gap: var(--at-card-gap-mobile);
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .services-grid,
+  .service-cards,
+  [class*="services-grid"],
+  [class*="service-cards"] {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ── Individual card padding normalization ── */
+.card,
+.service-card,
+.feature-card,
+[class*="-card"],
+[class*="card-"] {
+  padding: clamp(16px, 3vw, 28px);
+}
+
+@media (max-width: 640px) {
+  .card,
+  .service-card,
+  .feature-card,
+  [class*="-card"],
+  [class*="card-"] {
+    padding: 20px 16px;
+  }
+}
+
+/* ── Contact Form (mobile) ── */
+@media (max-width: 640px) {
+  .contact-form,
+  form,
+  [class*="contact-form"] {
+    padding: 20px 16px;
+  }
+
+  .contact-form input,
+  .contact-form textarea,
+  .contact-form select,
+  form input,
+  form textarea,
+  form select {
+    font-size: 16px;  /* prevents iOS zoom on focus */
+    padding: 12px 14px;
+    width: 100%;
+  }
+
+  .contact-form label,
+  form label {
+    font-size: 0.875rem;
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .form-row,
+  .form-group,
+  [class*="form-row"] {
+    flex-direction: column !important;
+    gap: 12px;
+  }
+}
+
+/* ── FAQ Section (mobile) ── */
+@media (max-width: 640px) {
+  .faq-section,
+  [class*="faq"],
+  [id*="faq"] {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .faq-item,
+  [class*="faq-item"],
+  [class*="accordion-item"] {
+    padding: 16px 0;
+  }
+}
+
+/* ── Footer (mobile) ── */
+@media (max-width: 640px) {
+  footer,
+  .footer {
+    padding-top: 40px;
+    padding-bottom: 24px;
+  }
+
+  .footer-grid,
+  .footer-columns,
+  [class*="footer-grid"],
+  [class*="footer-columns"] {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px 16px;
+  }
+
+  .footer-brand,
+  .footer-logo,
+  [class*="footer-brand"] {
+    grid-column: 1 / -1;   /* brand spans full width */
+    margin-bottom: 8px;
+  }
+
+  .footer-bottom,
+  [class*="footer-bottom"] {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 8px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+  }
+}
+
+/* ── Nav / Header (mobile) ── */
+@media (max-width: 768px) {
+  header,
+  .navbar,
+  .header,
+  nav {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* ── Global container safe-zones ── */
+.container,
+.wrapper {
+  padding-left: max(16px, env(safe-area-inset-left));
+  padding-right: max(16px, env(safe-area-inset-right));
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* ── Fix any element wider than viewport ── */
+img, video, iframe, embed, object {
+  max-width: 100%;
+  height: auto;
+}
+
+/* ── Tablet (641–1024px) refinements ── */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .hero-title,
+  .hero-heading,
+  [class*="hero-title"],
+  [class*="hero-heading"] {
+    font-size: clamp(2rem, 4vw, 3rem);
+  }
+
+  .footer-grid,
+  .footer-columns,
+  [class*="footer-grid"],
+  [class*="footer-columns"] {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px 24px;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   5. BUTTON & CTA REFINEMENTS (accessibility + readability)
+   ════════════════════════════════════════════════════════════ */
+
+button,
+.btn,
+[class*="btn-"],
+[class*="-btn"],
+[role="button"] {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+button:hover,
+.btn:hover,
+[class*="btn-"]:hover {
+  opacity: 0.88;
+}
+
+button:focus-visible,
+.btn:focus-visible,
+a:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   END OF PATCH
+   ════════════════════════════════════════════════════════════ */

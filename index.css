@@ -1,0 +1,42 @@
+/* src/index.css  — FULL REPLACEMENT
+ *
+ * What changed vs original:
+ *   1. Added @import for ui-improvements.css patch
+ *   2. Added global overflow-x guard
+ *   3. Added font-smoothing for sharper text on all platforms
+ * Everything else is preserved.
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Import UI improvement patch ── */
+@import "./ui-improvements.css";
+
+/* ── Global baseline ── */
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  /* Remove default margin that causes section spacing issues */
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+  }
+
+  /* Consistent focus outline for keyboard nav */
+  :focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 3px;
+  }
+}
