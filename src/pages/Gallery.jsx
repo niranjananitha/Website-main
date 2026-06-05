@@ -47,13 +47,29 @@ const categories = ['all', 'acet college', 'aims college', 'sriet college', 'gct
 export default function Gallery() {
   useSEO('gallery', 'Gallery - Aroganam Technologies');
   const [filter, setFilter] = useState('all');
+  const [selectedImage, setSelectedImage] = useState(null);
 
   const filteredItems = filter === 'all' 
     ? galleryItems 
     : galleryItems.filter(item => item.category === filter);
 
+  // Lightbox Navigation Logic
+  const currentIndex = selectedImage ? filteredItems.findIndex(item => item.id === selectedImage.id) : -1;
+  const hasNext = currentIndex !== -1 && currentIndex < filteredItems.length - 1;
+  const hasPrev = currentIndex > 0;
+
+  const handleNext = (e) => {
+    e.stopPropagation();
+    if (hasNext) setSelectedImage(filteredItems[currentIndex + 1]);
+  };
+
+  const handlePrev = (e) => {
+    e.stopPropagation();
+    if (hasPrev) setSelectedImage(filteredItems[currentIndex - 1]);
+  };
+
   return (
-    <div className="flex-grow flex flex-col pt-24 pb-20 bg-background text-on-background">
+    <div className="flex-grow flex flex-col pt-24 pb-20 bg-background text-on-background relative">
       <div className="max-w-max-width mx-auto px-margin-mobile md:px-margin-desktop w-full text-center">
         
         {/* Filter Buttons */}
@@ -61,7 +77,10 @@ export default function Gallery() {
           {categories.map((cat) => (
             <button
               key={cat}
-              onClick={() => setFilter(cat)}
+              onClick={() => {
+                setFilter(cat);
+                setSelectedImage(null);
+              }}
               className={`px-6 py-2 rounded capitalize font-semibold tracking-wide transition-colors duration-300 ${
                 filter === cat 
                   ? 'bg-[#0b1145] text-white' 
@@ -88,6 +107,7 @@ export default function Gallery() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.3 }}
                 className="relative group aspect-square overflow-hidden cursor-pointer bg-surface-variant"
+                onClick={() => setSelectedImage(item)}
               >
                 <img 
                   src={item.src} 
@@ -97,15 +117,21 @@ export default function Gallery() {
                 
                 {/* Hover Overlay */}
                 <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col items-center justify-center p-4">
-                  <h3 className="text-white font-bold text-center text-sm md:text-base mb-4 drop-shadow-md">
+                  <h3 className="text-white font-bold text-center text-sm md:text-base mb-6 drop-shadow-md px-2 max-w-[90%] leading-relaxed">
                     {item.title}
                   </h3>
                   <div className="flex gap-4">
-                    <button className="w-10 h-10 rounded-full bg-[#0b1145] text-white flex items-center justify-center hover:bg-tertiary-fixed-dim transition-colors">
-                      <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>search</span>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setSelectedImage(item); }}
+                      className="w-12 h-12 rounded-md border border-white bg-[#0b1145] text-white flex items-center justify-center hover:bg-[#1a237e] transition-colors shadow-sm"
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>zoom_in</span>
                     </button>
-                    <button className="w-10 h-10 rounded-full bg-[#0b1145] text-white flex items-center justify-center hover:bg-tertiary-fixed-dim transition-colors">
-                      <span className="material-symbols-outlined" style={{ fontSize: '20px' }}>link</span>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); window.open(item.src, '_blank'); }}
+                      className="w-12 h-12 rounded-md border border-white bg-[#0b1145] text-white flex items-center justify-center hover:bg-[#1a237e] transition-colors shadow-sm"
+                    >
+                      <span className="material-symbols-outlined" style={{ fontSize: '24px' }}>link</span>
                     </button>
                   </div>
                 </div>
@@ -115,6 +141,69 @@ export default function Gallery() {
         </motion.div>
 
       </div>
+
+      {/* Lightbox Modal */}
+      <AnimatePresence>
+        {selectedImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex flex-col bg-[#111111]"
+            onClick={() => setSelectedImage(null)}
+          >
+            {/* Header / Close button */}
+            <div className="absolute top-0 right-0 p-4 z-10">
+              <button 
+                onClick={() => setSelectedImage(null)}
+                className="text-white/70 hover:text-white transition-colors flex items-center justify-center w-12 h-12 bg-black/30 rounded-full"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '28px' }}>close</span>
+              </button>
+            </div>
+
+            {/* Navigation Left */}
+            {hasPrev && (
+              <button 
+                className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors z-10 flex items-center justify-center w-12 h-12 md:w-16 md:h-16"
+                onClick={handlePrev}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '36px', fontWeight: '200' }}>arrow_back_ios</span>
+              </button>
+            )}
+
+            {/* Navigation Right */}
+            {hasNext && (
+              <button 
+                className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 text-white/50 hover:text-white transition-colors z-10 flex items-center justify-center w-12 h-12 md:w-16 md:h-16"
+                onClick={handleNext}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '36px', fontWeight: '200' }}>arrow_forward_ios</span>
+              </button>
+            )}
+
+            {/* Main Content */}
+            <div className="flex-grow flex items-center justify-center p-4 md:p-12 overflow-hidden relative" onClick={e => e.stopPropagation()}>
+              <motion.img 
+                key={selectedImage.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
+                src={selectedImage.src} 
+                alt={selectedImage.title} 
+                className="max-w-full max-h-full object-contain drop-shadow-2xl"
+              />
+            </div>
+
+            {/* Footer / Caption */}
+            <div className="bg-[#111111] py-4 px-6 text-center z-10" onClick={e => e.stopPropagation()}>
+              <p className="text-white/90 text-sm md:text-base tracking-wide font-medium">
+                {selectedImage.title}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
